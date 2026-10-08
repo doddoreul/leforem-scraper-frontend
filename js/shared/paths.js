@@ -14,7 +14,7 @@
 import { byId } from "./dom.js";
 
 /** Configured values, filled by loadConfig before the pages read anything. */
-let settings = { dataUrl: "./raw.json", base: "" };
+let settings = { dataUrl: "https://raw.githubusercontent.com/doddoreul/leforem-scraper-backend/refs/heads/master/raw.json", base: "" };
 
 let loaded = null;
 
