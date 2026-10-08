@@ -1744,6 +1744,24 @@ function exportCsv() {
 // ============================================================
 
 const STALE_AFTER_HOURS = 12;
+// Once « J'ai compris » is clicked, the notice stays away for 24 h.
+const STALE_REMIND_SECONDS = 24 * 3600;
+const STALE_COOKIE = "stale_notice_dismissed";
+
+function staleNoticeDismissed() {
+    const match = document.cookie
+        .split("; ")
+        .find(function (row) { return row.indexOf(STALE_COOKIE + "=") === 0; });
+    if (!match) return false;
+    const at = Number(match.split("=")[1]);
+    return Number.isFinite(at) && Date.now() - at < STALE_REMIND_SECONDS * 1000;
+}
+
+function rememberStaleDismissed() {
+    document.cookie = STALE_COOKIE + "=" + Date.now() +
+        "; max-age=" + STALE_REMIND_SECONDS +
+        "; path=/; SameSite=Lax";
+}
 
 function timeAgoLabel(timestamp) {
     if (!timestamp) return "date inconnue";
@@ -1759,6 +1777,7 @@ function timeAgoLabel(timestamp) {
 
 function maybeShowStaleAlert(scrapeDate) {
     if (staleAlertShown) return;
+    if (staleNoticeDismissed()) return;
     const t = new Date(scrapeDate).getTime();
     if (isNaN(t)) return;
     const tooOld =
@@ -1782,6 +1801,7 @@ function maybeShowStaleAlert(scrapeDate) {
 }
 
 function closeStaleAlert() {
+    rememberStaleDismissed();
     const modal = document.getElementById("staleModal");
     if (modal) modal.classList.remove("visible");
 }
