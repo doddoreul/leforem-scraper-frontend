@@ -10,10 +10,6 @@ import {
 import { formatDateTime } from "../shared/dates.js";
 import { detailHref } from "../shared/links.js";
 import {
-    STORAGE_KEY,
-    createScrapingSelector,
-} from "../shared/scraping-selector.js";
-import {
     STATUS_OPTIONS as CANONICAL_STATUS_OPTIONS,
     priorityLabel,
     statusRank,
@@ -47,18 +43,12 @@ const GEAR_ACTIONS = [
     ...TRACKING_GEAR_ACTIONS,
 ];
 
-// Base URLs for the active scraping; populated by setupScrapingSelector()
-let dataUrl = "";
-let historyUrl = "";
+// Dataset shown by the table. The selector is gone: the page always merges
+// every published search.
+let dataUrl = "all";
 
 let storagePrefix = storagePrefixFor("");
 let activeBaseName = "";
-let activeScrapings = [];
-
-function setActiveScraping(baseName) {
-    storagePrefix = storagePrefixFor(baseName);
-    activeBaseName = baseName || "";
-}
 
 // The offers table shows an em dash for untrielled offers, where the offer
 // sheet and the dashboard spell out "Non trié".
@@ -1307,11 +1297,6 @@ function updateGroupFilterZones() {
     });
 }
 
-function resetGroupFilter() {
-    groupFilter = "all";
-    groupFilterZones.forEach(zone => zone.classList.remove("active"));
-}
-
 
 // ============================================================
 // TABS
@@ -1335,51 +1320,8 @@ function setupTabs() {
 
 
 // ============================================================
-// DATASET SELECTOR — which set of offers the table shows
+// DATASET — the table always shows every published search
 // ============================================================
-
-// La recherche affichée : le composant ne déclenche pas onChange au premier
-// rendu, c'est ici qu'on décide ce que le tableau montre à l'ouverture.
-function applyScrapingSelection(key, scrapings) {
-    activeScrapings = scrapings;
-    if (key === "all") {
-        dataUrl = "all";
-        historyUrl = "";
-        setActiveScraping("");
-        return;
-    }
-    const scrape = scrapings.find(function (s) { return s.file === key; });
-    if (!scrape) return;
-    dataUrl = scrape.file;
-    setActiveScraping(scrape.name || "");
-}
-
-function setupDatasetSelector() {
-    const select = document.getElementById("scrapingSelect");
-    if (!select) return Promise.resolve();
-
-    return createScrapingSelector({
-        selectId: "scrapingSelect",
-        allowAll: true,      // "Toutes les recherches" option
-        onChange: function (key, scrapings) {
-            applyScrapingSelection(key, scrapings);
-            reloadStorageMaps();
-            resetGroupFilter();
-            resetSort();
-            reloadTables();
-        }
-    }).then(function (result) {
-        try {
-            // result.current is the search kept in localStorage, or
-            // "all" when there is none.
-            applyScrapingSelection(result.current, result.scrapings);
-            reloadStorageMaps();
-            reloadTables();
-        } catch (e) {
-            console.error("Error restoring the dataset selection:", e);
-        }
-    });
-}
 
 // The page title names the dataset shown. A long label is shortened for
 // display but kept whole in the tooltip and the document title.
@@ -1506,13 +1448,6 @@ function updateSortHeaders() {
             th.classList.add(sortDir === 1 ? "sort-asc" : "sort-desc");
         }
     });
-}
-
-function resetSort() {
-    sortTable = null;
-    sortKey = null;
-    sortDir = 0;
-    updateSortHeaders();
 }
 
 
@@ -1716,11 +1651,7 @@ function exportCsv() {
     const offers = getOffersForExport();
     const message = document.getElementById("exportMessage");
 
-    const select = document.getElementById("scrapingSelect");
-    const option = select && select.selectedOptions[0];
-    const base = (option && option.dataset.base) || "annonces";
-    const filename = "annonces_" + base + "_" +
-        localDateString(new Date()) + ".csv";
+    const filename = "annonces_" + localDateString(new Date()) + ".csv";
 
     if (!offers.length) {
         if (message) {
@@ -1974,8 +1905,6 @@ async function init() {
             "Postulé ou contacté depuis plus de " + FOLLOWUP_DAYS + " jours.";
     }
     refreshFollowUps();
-
-    await setupDatasetSelector();
 
     const filter = document.getElementById("statusFilter");
     if (filter) {
