@@ -9,12 +9,6 @@ import { fetchExport, fetchScrapings, searchOf } from "../shared/api.js";
 import { parseForemDate } from "../shared/dates.js";
 import { el } from "../shared/dom.js";
 import { detailHref } from "../shared/links.js";
-import {
-    STORAGE_KEY,
-    createScrapingSelector,
-    filterScrapings,
-    getScrapingByKey,
-} from "../shared/scraping-selector.js";
 import { STATUS_OPTIONS, statusLabel } from "../shared/statuses.js";
 import { migrateLegacyStorage, readTrackedMap, storagePrefixFor } from "../shared/storage.js";
 import { SUIVI_EVENT, TRACKING_GEAR_ACTIONS, setupSuiviActions } from "../shared/suivi.js";
@@ -30,8 +24,6 @@ const STATE_TXT = {
 };
 
 let scrapings = [];
-let scope = "all";
-let scopeFile = "all";
 let dataSets = [];
 let lastScrapeHistory = null;
 
@@ -40,59 +32,8 @@ migrateLegacyStorage();
 
 initTheme(TRACKING_GEAR_ACTIONS);
 
-function readScopeFile() {
-    try {
-        const raw = localStorage.getItem(STORAGE_KEY);
-        if (raw === "all") return "all";
-        const found = getScrapingByKey(scrapings, raw);
-        if (found) return found.file;
-    } catch (e) {
-        // ignore
-    }
-    return "all";
-}
-
-function readScope() {
-    // Backward compatibility: returns name for prefix
-    const file = readScopeFile();
-    if (file === "all") return "all";
-    const found = getScrapingByKey(scrapings, file);
-    return found ? found.name : "all";
-}
-
-function populateScopeSelect() {
-    const select = document.getElementById("dashScope");
-    if (!select) return Promise.resolve();
-
-    return createScrapingSelector({
-        selectId: "dashScope",
-        allowAll: true,       // "Toutes les recherches"
-        onChange: function (key) {
-            if (key === "all") {
-                scope = "all";
-                scopeFile = "all";
-            } else {
-                const found = scrapings.find(function (s) { return s.file === key; });
-                if (found) {
-                    scope = found.name;
-                    scopeFile = found.file;
-                } else {
-                    scope = "all";
-                    scopeFile = "all";
-                }
-            }
-            try {
-                localStorage.setItem(STORAGE_KEY, scopeFile);
-            } catch (e) {
-                // ignore
-            }
-            refresh();
-        }
-    });
-}
-
 function scopeEntries() {
-    return filterScrapings(scrapings, scopeFile);
+    return scrapings;
 }
 
 function offerState(offer) {
@@ -460,9 +401,7 @@ function renderEvolution(scrapeHistory) {
     const note = document.getElementById("evolutionNote");
     const records = (scrapeHistory && Array.isArray(scrapeHistory.scrapes))
         ? scrapeHistory.scrapes.slice() : [];
-    const filtered = scope === "all"
-        ? records
-        : records.filter(r => r.search === scope);
+    const filtered = records;
     if (!filtered.length) {
         note.textContent = "Pas encore d'historique de scrapings.";
         drawChart(canvas, [], []);
@@ -563,9 +502,7 @@ function renderScrapesTable(scrapeHistory) {
     const tbody = document.getElementById("scrapesTable");
     const records = (scrapeHistory && Array.isArray(scrapeHistory.scrapes))
         ? scrapeHistory.scrapes.slice() : [];
-    const filtered = scope === "all"
-        ? records
-        : records.filter(r => r.search === scope);
+    const filtered = records;
     tbody.innerHTML = "";
     if (!filtered.length) {
         const tr = document.createElement("tr");
@@ -626,22 +563,6 @@ async function init() {
         showEmpty();
         return;
     }
-    // Initialize both scope (name for prefix) and scopeFile (file for filtering)
-    const stored = readScopeFile();
-    if (stored === "all") {
-        scope = "all";
-        scopeFile = "all";
-    } else {
-        const found = getScrapingByKey(scrapings, stored);
-        if (found) {
-            scope = found.name;
-            scopeFile = found.file;
-        } else {
-            scope = "all";
-            scopeFile = "all";
-        }
-    }
-    await populateScopeSelect();
     await refresh();
 }
 

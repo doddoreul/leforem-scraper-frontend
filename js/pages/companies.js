@@ -366,11 +366,11 @@ function buildModal() {
     const title = el("h2", "", "Détails de l'employeur");
     title.id = "companyModalTitle";
     header.appendChild(title);
-    const close = el("button", "modal-close", "×");
-    close.type = "button";
-    close.setAttribute("aria-label", "Fermer");
-    close.addEventListener("click", closeModal);
-    header.appendChild(close);
+    const closeHeader = el("button", "modal-close", "×");
+    closeHeader.type = "button";
+    closeHeader.setAttribute("aria-label", "Fermer");
+    closeHeader.addEventListener("click", closeModal);
+    header.appendChild(closeHeader);
     box.appendChild(header);
 
     const body = el("div", "company-modal-body");
@@ -383,10 +383,10 @@ function buildModal() {
     // The index is published in the export; the site cannot write it back.
     status.textContent = "Index publié dans l'export JSON, non modifiable ici.";
     footer.appendChild(status);
-    const close = el("button", "btn btn-secondary", "Fermer");
-    close.type = "button";
-    close.addEventListener("click", closeModal);
-    footer.appendChild(close);
+    const closeFooter = el("button", "btn btn-secondary", "Fermer");
+    closeFooter.type = "button";
+    closeFooter.addEventListener("click", closeModal);
+    footer.appendChild(closeFooter);
     box.appendChild(footer);
 
     modal.appendChild(box);

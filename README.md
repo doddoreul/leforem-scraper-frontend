@@ -62,7 +62,6 @@ Les paramètres utilisateur sont stockés dans `localStorage` :
 - Profil candidat (`forem_profil`)
 - Suivi des offres (`forem_<base>_statuts`, `_remarques`, `_favoris`, etc.)
 - Thème (`forem_theme`)
-- Sélection de recherche (`forem_scraping_select`)
 
 ## Mise à jour des données
 
