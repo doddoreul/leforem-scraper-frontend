@@ -12,7 +12,6 @@ import { detailHref } from "../shared/links.js";
 import {
     STORAGE_KEY,
     createScrapingSelector,
-    refreshScrapingSelector,
 } from "../shared/scraping-selector.js";
 import {
     STATUS_OPTIONS as CANONICAL_STATUS_OPTIONS,
@@ -1407,7 +1406,6 @@ function updateTitle(data) {
 
 let currentOffers = [];
 let lastScrapeDate = "";
-let lastData = null;
 let staleAlertShown = false;
 
 let sortTable = null;
@@ -1759,8 +1757,8 @@ function timeAgoLabel(timestamp) {
     return "il y a " + days + " jours";
 }
 
-function maybeShowStaleAlert(data, scrapeDate) {
-    if (staleAlertShown || !data) return;
+function maybeShowStaleAlert(scrapeDate) {
+    if (staleAlertShown) return;
     const t = new Date(scrapeDate).getTime();
     if (isNaN(t)) return;
     const tooOld =
@@ -1769,24 +1767,15 @@ function maybeShowStaleAlert(data, scrapeDate) {
 
     staleAlertShown = true;
 
-    // « Toutes les recherches » cannot be refreshed as a whole: the scraper
-    // works on one search at a time, so the alert only invites the user to
-    // pick one.
-    const isAll = dataUrl === "all";
+    // Passive notice only: the backend refreshes the data on its own, so the
+    // modal never offers to trigger anything.
     const age = timeAgoLabel(scrapeDate);
     const hint = document.getElementById("staleHint");
     if (hint) {
-        hint.innerHTML = isAll
-            ? "Dernière mise à jour : <strong>" + age + "</strong>. " +
-              "Certaines données sont peut-être obsolètes : sélectionnez un " +
-              "scraping précis puis actualisez-le."
-            : "Dernière mise à jour : <strong>" + age + "</strong>. " +
-              "De nouvelles annonces ont peut-être été publiées depuis : " +
-              "actualisez vos scrapps pour les afficher.";
+        hint.innerHTML = "Dernière mise à jour : <strong>" + age + "</strong>. " +
+            "Pas d'inquiétude : la mise à jour arrivera incessamment sous peu, " +
+            "automatiquement.";
     }
-
-    const refreshBtn = document.getElementById("staleRefreshBtn");
-    if (refreshBtn) refreshBtn.style.display = isAll ? "none" : "";
 
     const modal = document.getElementById("staleModal");
     if (modal) modal.classList.add("visible");
@@ -1795,14 +1784,6 @@ function maybeShowStaleAlert(data, scrapeDate) {
 function closeStaleAlert() {
     const modal = document.getElementById("staleModal");
     if (modal) modal.classList.remove("visible");
-}
-
-function refreshFromStaleAlert() {
-    // Same path as the « Actualiser » button next to the last scrape date:
-    // confirmation, then the scraping itself.
-    closeStaleAlert();
-    const button = document.getElementById("refreshScrapeBtn");
-    if (button) button.click();
 }
 
 
@@ -1879,14 +1860,6 @@ async function reloadTables() {
     lastScrapeDate = scrapeDate;
     // The menu lists the places of this scrape, so it follows the selection.
     fillLocationFilter(offers);
-    // Store metadata needed for stale alert command generation
-    lastData = {
-        offers: offers,
-        occupation_guid: data && data.occupation_guid,
-        location_guid: data && data.location_guid,
-        name: data && data.name,
-        label: data && data.label
-    };
 
     const keepNumbers = new Set(offers.map(o => String(o.number)));
 
@@ -2017,8 +1990,18 @@ async function init() {
         });
     });
 
+    const staleModal = document.getElementById("staleModal");
+    if (staleModal) {
+        ["closeStaleBtn", "closeStaleFooterBtn"].forEach(function (id) {
+            const btn = document.getElementById(id);
+            if (btn) btn.addEventListener("click", closeStaleAlert);
+        });
+        const backdrop = staleModal.querySelector(".modal-backdrop");
+        if (backdrop) backdrop.addEventListener("click", closeStaleAlert);
+    }
+
     await reloadTables();
-    maybeShowStaleAlert(lastData, lastScrapeDate);
+    maybeShowStaleAlert(lastScrapeDate);
 }
 
 document.addEventListener(SUIVI_EVENT, function () {

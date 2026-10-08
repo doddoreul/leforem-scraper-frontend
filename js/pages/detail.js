@@ -330,8 +330,8 @@ function renderNotAvailable(root, message) {
     const p = el("p", "empty-text", message);
     card.appendChild(p);
     const p2 = el("p", "empty-text",
-        "Les fiches sont reconstruites lors du prochain scraping (python scraper.py), " +
-        "puis recharge cette page.");
+        "Les fiches seront reconstruites automatiquement lors de la prochaine " +
+        "mise à jour des données, puis recharge cette page.");
     card.appendChild(p2);
 
     const actionsRow = el("div", "empty-actions");

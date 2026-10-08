@@ -67,7 +67,6 @@ function populateScopeSelect() {
     return createScrapingSelector({
         selectId: "dashScope",
         allowAll: true,       // "Toutes les recherches"
-        allowCreate: true,    // "Créer un nouveau scrap"
         onChange: function (key) {
             if (key === "all") {
                 scope = "all";
@@ -644,11 +643,6 @@ async function init() {
     }
     await populateScopeSelect();
     await refresh();
-
-    // Handle "Créer un nouveau scrap" from shared selector
-    document.addEventListener("foremCreateScrape", function () {
-        window.open("/index.html", "_blank");
-    });
 }
 
 document.addEventListener("DOMContentLoaded", init);
