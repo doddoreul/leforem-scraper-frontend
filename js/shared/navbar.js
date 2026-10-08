@@ -7,7 +7,7 @@ export async function loadNavbar() {
     if (!container) return;
 
     try {
-        const response = await fetch("/navbar_include.html", { cache: "no-store" });
+        const response = await fetch("navbar_include.html", { cache: "no-store" });
         if (!response.ok) throw new Error("HTTP " + response.status);
         container.innerHTML = await response.text();
 
