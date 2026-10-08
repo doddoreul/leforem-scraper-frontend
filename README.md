@@ -38,12 +38,16 @@ python serveur.py
 ```
 leforem-scraper-frontend/
 ├── index.html          # Page principale
+├── detail.html         # Fiche offre
+├── insights.html       # Dashboard
+├── companies.html      # Employeurs
+├── profil.html         # Profil
+├── navbar_include.html # Navigation partagée
 ├── site.config.json    # Configuration (dataUrl, base)
 ├── serveur.py          # Serveur local pour le développement
 ├── js/                 # Modules JavaScript
 │   ├── shared/         # Modules communs (api, storage, profile, paths)
 │   └── pages/          # Pages (index, detail, profil, companies, insights)
-├── html/               # Pages HTML
 └── css/                # Feuilles de style
 ```
 

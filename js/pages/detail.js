@@ -336,7 +336,7 @@ function renderNotAvailable(root, message) {
 
     const actionsRow = el("div", "empty-actions");
     const back = el("a", "btn btn-outline", "← Retour aux annonces");
-    back.href = "/index.html";
+    back.href = "index.html";
     back.classList.add("empty-action");
     actionsRow.appendChild(back);
 
